@@ -739,6 +739,7 @@ service/demoapp unchanged
 Finished: SUCCESS
 ```
 Смотрим на docker hub собранные образ появился
+https://hub.docker.com/repository/docker/lutovp/demoapp
 
 ![Виртуальные машины](/images/docker_hub.png)
 
