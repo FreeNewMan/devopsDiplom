@@ -1,0 +1,16 @@
+apiVersion: qbec.io/v1alpha1
+kind: App
+metadata:
+  name: demoapp
+spec:
+  environments:
+    default:
+      defaultNamespace: diplom
+      server: https://51.250.64.33:6443
+    stage:
+      defaultNamespace: diplom-stage
+      server: https://51.250.64.33:6443
+    prod:
+      defaultNamespace: diplom-prod
+      server: https://51.250.64.33:6443      
+  vars: {}

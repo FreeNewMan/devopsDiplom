@@ -1,0 +1,13 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: usrdip
+  namespace: diplom-stage
+subjects:
+- kind: User
+  name: usrdip
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: demoapp-deploy
+  apiGroup: rbac.authorization.k8s.io
