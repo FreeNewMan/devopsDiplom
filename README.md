@@ -258,6 +258,11 @@ kube-system    nodelocaldns-dzbt6                         1/1     Running   0   
 https://github.com/FreeNewMan/demoapp.git
 ```
 
+**Репозиторий со образами**
+
+```
+https://hub.docker.com/repository/docker/lutovp/demoapp
+```
 ---
 ### Подготовка cистемы мониторинга и деплой приложения
 
