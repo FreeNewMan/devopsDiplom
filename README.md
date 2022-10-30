@@ -415,7 +415,6 @@ admin/TGra6vWV
 
 
 1. Создание пользователя для подключения и деплоя с Jenkins с ограниченными правами (все права на namespace diplom-stage) на мастер ноде kubernetes:
-На мастер ноде:
 
 ```
 useradd usrdip && cd /home/usrdip
