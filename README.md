@@ -543,6 +543,211 @@ ssh-keyscan github.com >> ~/.ssh/known_hosts
 При настройки pipline указываем репозиторий приложения (там же лежит jenkins файл и манифест для деплоя в кластер) и ставим отметку GitHub hook trigger for GITScm polling.
 
 
+
+Проверяем работу pipline в jenkins:
+
+До коммита в репозиторий:
+
+![Приложение](/images/before_push.png)
+
+Вносим изменения в репозиторий, делаем изменения в index.html, 
+меняем тег в kube-deploy.yml 
+
+```
+> git add .
+devuser@devuser-virtual-machine:~/Diplom/demoapp$
+> git commit -m 'v0.0.9'
+[main 54f1e39] v0.0.9
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+devuser@devuser-virtual-machine:~/Diplom/demoapp$
+> git push --tags
+Total 0 (delta 0), reused 0 (delta 0)
+To https://github.com/FreeNewMan/demoapp.git
+ * [new tag]         v0.0.9 -> v0.0.9
+devuser@devuser-virtual-machine:~/Diplom/demoapp$
+> git push
+Enumerating objects: 9, done.
+Counting objects: 100% (9/9), done.
+Delta compression using up to 4 threads
+Compressing objects: 100% (4/4), done.
+Writing objects: 100% (5/5), 420 bytes | 140.00 KiB/s, done.
+Total 5 (delta 3), reused 0 (delta 0)
+remote: Resolving deltas: 100% (3/3), completed with 3 local objects.
+To https://github.com/FreeNewMan/demoapp.git
+   ad4d27f..54f1e39  main -> main
+```
+
+Смотрим лог в jenkins:
+
+```
+Started by GitHub push by FreeNewMan
+Obtained Jenkinsfile from git https://github.com/FreeNewMan/demoapp.git
+[Pipeline] Start of Pipeline
+[Pipeline] node
+Running on centos7-agent in /opt/jenkins_agent/workspace/diplom
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Git checkout)
+[Pipeline] git
+Selected Git installation does not exist. Using Default
+The recommended git tool is: NONE
+using credential 15711219-9cd1-4659-9137-48c98ec36275
+Fetching changes from the remote Git repository
+ > git rev-parse --resolve-git-dir /opt/jenkins_agent/workspace/diplom/.git # timeout=10
+ > git config remote.origin.url git@github.com:FreeNewMan/demoapp.git # timeout=10
+Fetching upstream changes from git@github.com:FreeNewMan/demoapp.git
+ > git --version # timeout=10
+ > git --version # 'git version 1.8.3.1'
+using GIT_SSH to set credentials 
+[INFO] Currently running in a labeled security context
+[INFO] Currently SELinux is 'enforcing' on the host
+ > /usr/bin/chcon --type=ssh_home_t /opt/jenkins_agent/workspace/diplom@tmp/jenkins-gitclient-ssh13337779407390208405.key
+Verifying host key using known hosts file
+ > git fetch --tags --progress git@github.com:FreeNewMan/demoapp.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+Checking out Revision 54f1e39416352f9ddfb99e98d48f1336508ee466 (refs/remotes/origin/main)
+Commit message: "v0.0.9"
+ > git rev-parse refs/remotes/origin/main^{commit} # timeout=10
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 54f1e39416352f9ddfb99e98d48f1336508ee466 # timeout=10
+ > git branch -a -v --no-abbrev # timeout=10
+ > git branch -D main # timeout=10
+ > git checkout -b main 54f1e39416352f9ddfb99e98d48f1336508ee466 # timeout=10
+ > git rev-list --no-walk ad4d27fe53a3ae56f37709fbf28a910c1fb4efed # timeout=10
+[Pipeline] script
+[Pipeline] {
+[Pipeline] sh
++ git describe --abbrev=0 --tags
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] echo
+v0.0.9
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Sample define secret_check)
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Build image)
+[Pipeline] isUnix
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] sh
++ docker build -t lutovp/demoapp .
+Sending build context to Docker daemon  392.2kB
+
+Step 1/2 : FROM nginx
+ ---> 76c69feac34e
+Step 2/2 : COPY html /usr/share/nginx/html
+ ---> d1ecc22b09bb
+Successfully built d1ecc22b09bb
+Successfully tagged lutovp/demoapp:latest
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Test image)
+[Pipeline] isUnix
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] sh
++ docker inspect -f . lutovp/demoapp
+.
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] withDockerContainer
+centos7-agent does not seem to be running inside a container
+$ docker run -t -d -u 1001:100 -w /opt/jenkins_agent/workspace/diplom -v /opt/jenkins_agent/workspace/diplom:/opt/jenkins_agent/workspace/diplom:rw,z -v /opt/jenkins_agent/workspace/diplom@tmp:/opt/jenkins_agent/workspace/diplom@tmp:rw,z -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** -e ******** lutovp/demoapp cat
+$ docker top 60327632ffa52c4223cbe7c08771ea071fd0d7a9e371f9efa8dc1f8dab0e7acb -eo pid,comm
+[Pipeline] {
+[Pipeline] sh
++ echo Hello
+Hello
+[Pipeline] }
+$ docker stop --time=1 60327632ffa52c4223cbe7c08771ea071fd0d7a9e371f9efa8dc1f8dab0e7acb
+$ docker rm -f 60327632ffa52c4223cbe7c08771ea071fd0d7a9e371f9efa8dc1f8dab0e7acb
+[Pipeline] // withDockerContainer
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Push image)
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] withDockerRegistry
+$ docker login -u lutovp -p ******** https://registry.hub.docker.com
+WARNING! Using --password via the CLI is insecure. Use --password-stdin.
+WARNING! Your password will be stored unencrypted in /opt/jenkins_agent/workspace/diplom@tmp/090558e7-a578-4aa4-b7f4-6b600350c718/config.json.
+Configure a credential helper to remove this warning. See
+https://docs.docker.com/engine/reference/commandline/login/#credentials-store
+
+Login Succeeded
+[Pipeline] {
+[Pipeline] isUnix
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] sh
++ docker tag lutovp/demoapp registry.hub.docker.com/lutovp/demoapp:v0.0.9
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] isUnix
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] sh
++ docker push registry.hub.docker.com/lutovp/demoapp:v0.0.9
+The push refers to repository [registry.hub.docker.com/lutovp/demoapp]
+ea7ba2b9436d: Preparing
+a2e59a79fae0: Preparing
+4091cd312f19: Preparing
+9e7119c28877: Preparing
+2280b348f4d6: Preparing
+e74d0d8d2def: Preparing
+a12586ed027f: Preparing
+e74d0d8d2def: Waiting
+a12586ed027f: Waiting
+a2e59a79fae0: Layer already exists
+2280b348f4d6: Layer already exists
+4091cd312f19: Layer already exists
+9e7119c28877: Layer already exists
+e74d0d8d2def: Layer already exists
+a12586ed027f: Layer already exists
+ea7ba2b9436d: Pushed
+v0.0.9: digest: sha256:21d022f227d905414504274b220fc3649f7b484f88497a19101a1c7d3efcb85f size: 1777
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // withDockerRegistry
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Deploy App)
+[Pipeline] script
+[Pipeline] {
+[Pipeline] sh
++ kubectl apply -f kube_deploy.yml -n diplom-stage
+deployment.apps/demoapp configured
+service/demoapp unchanged
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
+Finished: SUCCESS
+```
+Смотрим на docker hub собранные образ появился
+
+![Виртуальные машины](/images/docker_hub.png)
+
+Отобразились видимые изменения
+ http://51.250.64.33:30585/
+
+
+![Приложение](/images/after_push.png)
+
 ---
 ## Что необходимо для сдачи задания?
 
